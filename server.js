@@ -106,6 +106,14 @@ function normalizeKeyName(name) {
     return mapping[name] || name;
 }
 
+app.use(express.static('public'));
+app.use('/assets', express.static(path.join(__dirname, 'assets')));
+
+// API: 状態取得
+app.get('/api/state', (req, res) => {
+    res.json(state);
+});
+
 // Socket.io 通信
 io.on('connection', (socket) => {
     console.log('クライアントが接続しましたわ');
