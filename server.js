@@ -146,26 +146,53 @@ v.addListener((e, down) => {
     }
 });
 
+// アウトが一巡したときの処理（裏表・イニング進行、BSO全リセット）
+function advanceHalfInning() {
+    state.ball = 0;
+    state.strike = 0;
+    state.out = 0;
+    state.runners = [false, false, false];
+    state.isTop = !state.isTop;
+    if (state.isTop) {
+        // 裏→表（bottom→top）の切り替え時にイニング増加
+        state.inning++;
+    }
+}
+
 function handleAction(action) {
     switch (action) {
         case 'addBall':
             state.ball++;
-            if (state.ball >= 4) state.ball = 0;
+            if (state.ball >= 4) {
+                // ボールが一巡したらストライク増加
+                state.ball = 0;
+                state.strike++;
+                if (state.strike >= 3) {
+                    // ストライクも一巡したらアウト増加
+                    state.strike = 0;
+                    state.out++;
+                    if (state.out >= 3) {
+                        advanceHalfInning();
+                    }
+                }
+            }
             break;
         case 'addStrike':
             state.strike++;
             if (state.strike >= 3) {
+                // ストライクが一巡したらアウト増加
                 state.strike = 0;
                 state.ball = 0;
-                // handleAction('addOut'); // オートマチックにするかは要検討
+                state.out++;
+                if (state.out >= 3) {
+                    advanceHalfInning();
+                }
             }
             break;
         case 'addOut':
             state.out++;
             if (state.out >= 3) {
-                state.out = 0;
-                state.ball = 0;
-                state.strike = 0;
+                advanceHalfInning();
             }
             break;
         case 'toggleRunner1': state.runners[0] = !state.runners[0]; break;
