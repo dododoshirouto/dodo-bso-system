@@ -108,9 +108,14 @@
     </div>
 
     <div class="panel">
-        <h2>操作方法 (グローバルホットキー)</h2>
-        <div id="key-guide">
+        <h2>キーバインド設定 (グローバルホットキー)</h2>
+        <div id="key-settings" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px;">
             <!-- サーバーから送られてくるキーバインドを表示 -->
+        </div>
+        <div id="listen-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:10000; justify-content:center; align-items:center; flex-direction:column;">
+            <div style="font-size: 2em; margin-bottom: 20px;">キーを押してください...</div>
+            <div id="target-action-name" style="color: #aaa;"></div>
+            <button onclick="cancelListen()" style="margin-top: 20px; background: #666;">キャンセル</button>
         </div>
     </div>
 
@@ -118,6 +123,7 @@
     <script>
         const socket = io();
         let currentState = {};
+        let listeningAction = null;
 
         socket.on('stateUpdate', (state) => {
             currentState = state;
@@ -136,19 +142,103 @@
             document.getElementById('rui2').checked = state.runners[1];
             document.getElementById('rui3').checked = state.runners[2];
 
-            // キーガイドの表示
-            const guide = document.getElementById('key-guide');
-            guide.innerHTML = '';
-            for (const [key, action] of Object.entries(state.keybindings)) {
-                const item = document.createElement('span');
-                item.style.marginRight = '15px';
-                item.style.padding = '4px 8px';
-                item.style.background = '#444';
-                item.style.borderRadius = '4px';
-                item.textContent = `${key}: ${action}`;
-                guide.appendChild(item);
-            }
+            // キーバインド設定の表示
+            renderKeySettings(state.keybindings);
         });
+
+        const actionLabels = {
+            addBall: "ボール追加",
+            addStrike: "ストライク追加",
+            addOut: "アウト追加",
+            toggleRunner1: "1塁ランナー",
+            toggleRunner2: "2塁ランナー",
+            toggleRunner3: "3塁ランナー",
+            addInning: "イニング増加",
+            toggleTopBottom: "表裏切り替え",
+            addTopScore: "先攻得点+",
+            addBottomScore: "後攻得点+",
+            resetCounts: "カウントリセット"
+        };
+
+        function renderKeySettings(keybindings) {
+            const container = document.getElementById('key-settings');
+            container.innerHTML = '';
+            
+            // アクションごとに現在のキーを探す
+            Object.entries(actionLabels).forEach(([action, label]) => {
+                const currentKeys = Object.entries(keybindings)
+                    .filter(([k, v]) => v === action)
+                    .map(([k, v]) => k);
+                
+                const item = document.createElement('div');
+                item.className = 'status-badge';
+                item.style.textAlign = 'left';
+                item.style.display = 'flex';
+                item.style.justifyContent = 'space-between';
+                item.style.alignItems = 'center';
+                item.innerHTML = `
+                    <div>
+                        <div style="font-size:0.7em; color:#aaa;">${label}</div>
+                        <div style="font-weight:bold;">${currentKeys.join(', ') || '未設定'}</div>
+                    </div>
+                    <button onclick="startListen('${action}')" style="padding: 5px 10px; font-size: 0.8em;">変更</button>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function startListen(action) {
+            listeningAction = action;
+            document.getElementById('target-action-name').textContent = actionLabels[action];
+            document.getElementById('listen-modal').style.display = 'flex';
+            window.addEventListener('keydown', captureKey);
+        }
+
+        function cancelListen() {
+            listeningAction = null;
+            document.getElementById('listen-modal').style.display = 'none';
+            window.removeEventListener('keydown', captureKey);
+        }
+
+        function captureKey(e) {
+            e.preventDefault();
+            const keyName = e.key;
+            
+            // キャンセル操作
+            if (keyName === 'Escape') {
+                cancelListen();
+                return;
+            }
+
+            const newKeybindings = { ...currentState.keybindings };
+
+            // 削除操作
+            if (keyName === 'Delete' || keyName === 'Backspace') {
+                for (let k in newKeybindings) {
+                    if (newKeybindings[k] === listeningAction) {
+                        delete newKeybindings[k];
+                    }
+                }
+            } else {
+                // 通常の登録操作
+                const normalizedKey = keyName.toUpperCase();
+                
+                // 他のアクションに割り当てられていたら消す
+                delete newKeybindings[normalizedKey];
+                
+                // この動作に割り当てられていた古いボタンも整理
+                for (let k in newKeybindings) {
+                    if (newKeybindings[k] === listeningAction) {
+                        delete newKeybindings[k];
+                    }
+                }
+                
+                newKeybindings[normalizedKey] = listeningAction;
+            }
+            
+            socket.emit('updateState', { keybindings: newKeybindings });
+            cancelListen();
+        }
 
         function updateInfo() {
             const newState = {
