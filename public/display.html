@@ -38,11 +38,19 @@
             display: block;
         }
         
+        /* テキストレイヤーのコンテナ */
+        .text-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 1920px;
+            height: 1080px;
+            z-index: 9999;
+        }
         /* テキスト要素のスタイル */
         .text-overlay {
             position: absolute;
             white-space: nowrap;
-            z-index: 9999;
             font-size: 30px;
             font-weight: bold;
         }
@@ -50,8 +58,8 @@
         #top-bottom-kanji { left: 1593px; top: 875px; }
         #team-top-name { left: 1537px; top: 920px; }
         #team-bottom-name { left: 1537px; top: 957px; }
-        #score-top { left: 1630px; top: 920px; }
-        #score-bottom { left: 1630px; top: 957px; }
+        #score-top { right: 253px; top: 920px; text-align: right; }
+        #score-bottom { right: 253px; top: 957px; text-align: right; }
     </style>
 </head>
 <body>
@@ -77,13 +85,15 @@
         <img id="t-img" src="/assets/t1.png" class="layer">
         <img id="b-img" src="/assets/t2.png" class="layer">
 
-        <!-- テキストレイヤー（ユーザー指定座標） -->
-        <div id="inning-num" class="text-overlay">1</div>
-        <div id="top-bottom-kanji" class="text-overlay">表</div>
-        <div id="team-top-name" class="text-overlay">先攻</div>
-        <div id="team-bottom-name" class="text-overlay">後攻</div>
-        <div id="score-top" class="text-overlay">0</div>
-        <div id="score-bottom" class="text-overlay">0</div>
+        <!-- テキストレイヤー（1920x1080コンテナで囲んでright/bottom指定可能） -->
+        <div class="text-layer">
+            <div id="inning-num" class="text-overlay">1</div>
+            <div id="top-bottom-kanji" class="text-overlay">表</div>
+            <div id="team-top-name" class="text-overlay">先攻</div>
+            <div id="team-bottom-name" class="text-overlay">後攻</div>
+            <div id="score-top" class="text-overlay">0</div>
+            <div id="score-bottom" class="text-overlay">0</div>
+        </div>
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
