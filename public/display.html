@@ -38,14 +38,20 @@
             display: block;
         }
         
-        /* テキスト要素のスタイル（位置は後ほど調整） */
+        /* テキスト要素のスタイル */
         .text-overlay {
             position: absolute;
             white-space: nowrap;
-            /* 仮の位置 */
-            top: 0;
-            left: 0;
+            z-index: 9999;
+            font-size: 30px;
+            font-weight: bold;
         }
+        #inning-num { left: 1563px; top: 875px; }
+        #top-bottom-kanji { left: 1593px; top: 875px; }
+        #team-top-name { left: 1537px; top: 920px; }
+        #team-bottom-name { left: 1537px; top: 957px; }
+        #score-top { left: 1630px; top: 920px; }
+        #score-bottom { left: 1630px; top: 957px; }
     </style>
 </head>
 <body>
@@ -71,7 +77,7 @@
         <img id="t-img" src="/assets/t1.png" class="layer">
         <img id="b-img" src="/assets/t2.png" class="layer">
 
-        <!-- テキストレイヤー（位置・サイズはユーザー指定待ち） -->
+        <!-- テキストレイヤー（ユーザー指定座標） -->
         <div id="inning-num" class="text-overlay">1</div>
         <div id="top-bottom-kanji" class="text-overlay">表</div>
         <div id="team-top-name" class="text-overlay">先攻</div>
