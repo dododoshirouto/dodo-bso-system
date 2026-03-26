@@ -4,8 +4,11 @@
 - `PLAN.md` の内容を確認
 - 実装計画 (`implementation_plan.md`) の作成
 - タスクリスト (`task.md`) の作成
-- ユーザーより画像素材 (`assets/*.png`) の提供と、アニメーション不要の指示を受領
-- 実装計画およびタスクリストを画像素材対応版に修正
+- サーバーサイド、コントロール画面、ディスプレイ画面の全実装を完了
+- `install.bat` および `start-bso-system.bat` を動作可能な状態に整備
 
 ### 次のステップ
-- ユーザーの再承認後、`package.json` の作成と `install.bat` の整備を開始
+1. `install.bat` を実行して依存モジュールをインストール
+2. `start-bso-system.bat` を実行してシステムを起動
+3. ブラウザで `http://localhost:3000/control.html` （操作用）と `http://localhost:3000/display.html` （表示用）を開く
+4. キーボード操作（B, S, Oキーなど）で表示が変わるか確認

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>BSO Display</title>
+    <style>
+        @font-face {
+            font-family: 'LINESeedJP';
+            src: url('/assets/LINESeedJP_OTF_Rg.otf');
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            background: transparent;
+            overflow: hidden;
+            font-family: 'LINESeedJP', sans-serif;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        }
+        .container {
+            position: relative;
+            width: 1280px;
+            height: 720px;
+        }
+        .bso-board {
+            position: absolute;
+            bottom: 50px;
+            left: 50px;
+            width: 400px;
+            height: 150px;
+            background: url('/assets/BSO.png') no-repeat;
+            background-size: contain;
+        }
+        .runners-board {
+            position: absolute;
+            bottom: 50px;
+            left: 460px;
+            width: 150px;
+            height: 150px;
+            background: url('/assets/base.png') no-repeat;
+            background-size: contain;
+        }
+        .score-board {
+            position: absolute;
+            top: 50px;
+            left: 50px;
+            background: rgba(0,0,0,0.5);
+            padding: 10px;
+            border-radius: 8px;
+            min-width: 300px;
+            backdrop-filter: blur(5px);
+        }
+        /* 各画像の表示制御 */
+        .count-img { display: none; position: absolute; }
+        .active { display: block; }
+
+        /* 位置合わせ（仮） */
+        #b1 { left: 80px; top: 20px; }
+        #b2 { left: 130px; top: 20px; }
+        #b3 { left: 180px; top: 20px; }
+        #s1 { left: 80px; top: 60px; }
+        #s2 { left: 130px; top: 60px; }
+        #o1 { left: 80px; top: 100px; }
+        #o2 { left: 130px; top: 100px; }
+
+        #rui1 { left: 100px; top: 70px; }
+        #rui2 { left: 60px; top: 30px; }
+        #rui3 { left: 20px; top: 70px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- BSOカウント -->
+        <div class="bso-board">
+            <img id="b1" class="count-img" src="/assets/b1.png">
+            <img id="b2" class="count-img" src="/assets/b2.png">
+            <img id="b3" class="count-img" src="/assets/b3.png">
+            <img id="s1" class="count-img" src="/assets/s1.png">
+            <img id="s2" class="count-img" src="/assets/s2.png">
+            <img id="o1" class="count-img" src="/assets/o1.png">
+            <img id="o2" class="count-img" src="/assets/o2.png">
+        </div>
+
+        <!-- 出塁状況 -->
+        <div class="runners-board">
+            <img id="rui1" class="count-img" src="/assets/rui1.png">
+            <img id="rui2" class="count-img" src="/assets/rui2.png">
+            <img id="rui3" class="count-img" src="/assets/rui3.png">
+        </div>
+
+        <!-- スコア・イニング -->
+        <div class="score-board">
+            <div>
+                <span id="inning-text">1回</span>
+                <img id="tb-img" src="/assets/t1.png" style="height: 1.2em; vertical-align: middle;">
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-top: 10px;">
+                <span id="top-name">先攻</span>
+                <span id="top-score">0</span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <span id="bottom-name">後攻</span>
+                <span id="bottom-score">0</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+
+        socket.on('stateUpdate', (state) => {
+            // ボール
+            document.getElementById('b1').classList.toggle('active', state.ball >= 1);
+            document.getElementById('b2').classList.toggle('active', state.ball >= 2);
+            document.getElementById('b3').classList.toggle('active', state.ball >= 3);
+            // ストライク
+            document.getElementById('s1').classList.toggle('active', state.strike >= 1);
+            document.getElementById('s2').classList.toggle('active', state.strike >= 2);
+            // アウト
+            document.getElementById('o1').classList.toggle('active', state.out >= 1);
+            document.getElementById('o2').classList.toggle('active', state.out >= 2);
+            // ランナー
+            document.getElementById('rui1').classList.toggle('active', state.runners[0]);
+            document.getElementById('rui2').classList.toggle('active', state.runners[1]);
+            document.getElementById('rui3').classList.toggle('active', state.runners[2]);
+            // スコア・チーム名
+            document.getElementById('top-name').textContent = state.teams.top.name;
+            document.getElementById('top-score').textContent = state.teams.top.score;
+            document.getElementById('bottom-name').textContent = state.teams.bottom.name;
+            document.getElementById('bottom-score').textContent = state.teams.bottom.score;
+            // イニング
+            document.getElementById('inning-text').textContent = state.inning + '回';
+            document.getElementById('tb-img').src = state.isTop ? '/assets/t1.png' : '/assets/t2.png';
+        });
+    </script>
+</body>
+</html>

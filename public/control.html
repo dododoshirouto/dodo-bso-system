@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>BSO Control GUI</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background: #1a1a1a;
+            color: #eee;
+            padding: 20px;
+        }
+        .panel {
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        h2 { margin-top: 0; border-bottom: 1px solid #444; padding-bottom: 10px; }
+        .flex { display: flex; gap: 20px; }
+        .input-group { margin-bottom: 10px; }
+        label { display: block; font-size: 0.9em; color: #aaa; margin-bottom: 4px; }
+        input[type="text"], input[type="number"] {
+            background: #333;
+            border: 1px solid #444;
+            color: white;
+            padding: 8px;
+            border-radius: 4px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .status-badge {
+            background: #444;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 1.2em;
+            text-align: center;
+            flex: 1;
+        }
+        button {
+            background: #007bff;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <h1>BSO Control Panel</h1>
+
+    <div class="flex">
+        <div class="panel" style="flex: 2;">
+            <h2>チーム設定</h2>
+            <div class="flex">
+                <div class="input-group" style="flex: 1;">
+                    <label>先攻チーム名</label>
+                    <input type="text" id="top-name" onchange="updateInfo()">
+                </div>
+                <div class="input-group" style="width: 80px;">
+                    <label>得点</label>
+                    <input type="number" id="top-score" onchange="updateInfo()">
+                </div>
+            </div>
+            <div class="flex">
+                <div class="input-group" style="flex: 1;">
+                    <label>後攻チーム名</label>
+                    <input type="text" id="bottom-name" onchange="updateInfo()">
+                </div>
+                <div class="input-group" style="width: 80px;">
+                    <label>得点</label>
+                    <input type="number" id="bottom-score" onchange="updateInfo()">
+                </div>
+            </div>
+            <div class="flex">
+                <div class="input-group" style="flex: 1;">
+                    <label>イニング</label>
+                    <input type="number" id="inning" onchange="updateInfo()">
+                </div>
+                <div class="input-group" style="flex: 1;">
+                    <label>表/裏</label>
+                    <select id="isTop" onchange="updateInfo()" style="width:100%; height:35px; background:#333; color:white; border:1px solid #444;">
+                        <option value="true">表</option>
+                        <option value="false">裏</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel" style="flex: 1;">
+            <h2>現在のカウント</h2>
+            <div style="font-size: 2em; line-height: 1.5;">
+                <div>B: <span id="b-text">0</span></div>
+                <div>S: <span id="s-text">0</span></div>
+                <div>O: <span id="o-text">0</span></div>
+            </div>
+            <div style="margin-top: 20px;">
+                <label>ランナー</label>
+                <div>
+                    <input type="checkbox" id="rui1" onchange="updateInfo()"> 1塁
+                    <input type="checkbox" id="rui2" onchange="updateInfo()"> 2塁
+                    <input type="checkbox" id="rui3" onchange="updateInfo()"> 3塁
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel">
+        <h2>操作方法 (グローバルホットキー)</h2>
+        <div id="key-guide">
+            <!-- サーバーから送られてくるキーバインドを表示 -->
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        let currentState = {};
+
+        socket.on('stateUpdate', (state) => {
+            currentState = state;
+            document.getElementById('top-name').value = state.teams.top.name;
+            document.getElementById('top-score').value = state.teams.top.score;
+            document.getElementById('bottom-name').value = state.teams.bottom.name;
+            document.getElementById('bottom-score').value = state.teams.bottom.score;
+            document.getElementById('inning').value = state.inning;
+            document.getElementById('isTop').value = state.isTop.toString();
+            
+            document.getElementById('b-text').textContent = state.ball;
+            document.getElementById('s-text').textContent = state.strike;
+            document.getElementById('o-text').textContent = state.out;
+
+            document.getElementById('rui1').checked = state.runners[0];
+            document.getElementById('rui2').checked = state.runners[1];
+            document.getElementById('rui3').checked = state.runners[2];
+
+            // キーガイドの表示
+            const guide = document.getElementById('key-guide');
+            guide.innerHTML = '';
+            for (const [key, action] of Object.entries(state.keybindings)) {
+                const item = document.createElement('span');
+                item.style.marginRight = '15px';
+                item.style.padding = '4px 8px';
+                item.style.background = '#444';
+                item.style.borderRadius = '4px';
+                item.textContent = `${key}: ${action}`;
+                guide.appendChild(item);
+            }
+        });
+
+        function updateInfo() {
+            const newState = {
+                teams: {
+                    top: { name: document.getElementById('top-name').value, score: parseInt(document.getElementById('top-score').value) },
+                    bottom: { name: document.getElementById('bottom-name').value, score: parseInt(document.getElementById('bottom-score').value) }
+                },
+                inning: parseInt(document.getElementById('inning').value),
+                isTop: document.getElementById('isTop').value === 'true',
+                runners: [
+                    document.getElementById('rui1').checked,
+                    document.getElementById('rui2').checked,
+                    document.getElementById('rui3').checked
+                ]
+            };
+            socket.emit('updateState', newState);
+        }
+    </script>
+</body>
+</html>

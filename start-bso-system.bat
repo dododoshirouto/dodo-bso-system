@@ -1,6 +1,7 @@
 chcp 65001
 setlocal
 
-rem any start commands...
+echo BSOシステムを起動しますわ。
+npm start
 
 endlocal
