@@ -10,18 +10,16 @@ const io = new Server(server);
 
 const PORT = 3000;
 
-// 状態管理
-let state = {
-    ball: 0,
-    strike: 0,
-    out: 0,
-    runners: [false, false, false], // [1塁, 2塁, 3塁]
+const fs = require('fs');
+
+const CONFIG_PATH = path.join(__dirname, 'config.json');
+
+// デフォルト設定
+const defaults = {
     teams: {
-        top: { name: '先攻', score: 0 },
-        bottom: { name: '後攻', score: 0 }
+        top: { name: '先攻' },
+        bottom: { name: '後攻' }
     },
-    inning: 1,
-    isTop: true,
     keybindings: {
         'KeyB': 'addBall',
         'KeyS': 'addStrike',
@@ -35,6 +33,52 @@ let state = {
         'KeyD': 'addBottomScore',
         'KeyR': 'resetCounts'
     }
+};
+
+// 設定のロード
+function loadConfig() {
+    try {
+        if (fs.existsSync(CONFIG_PATH)) {
+            const data = fs.readFileSync(CONFIG_PATH, 'utf8');
+            return JSON.parse(data);
+        }
+    } catch (e) {
+        console.error('設定のロードに失敗しましたわ:', e);
+    }
+    return defaults;
+}
+
+// 設定の保存
+function saveConfig() {
+    const configToSave = {
+        teams: {
+            top: { name: state.teams.top.name },
+            bottom: { name: state.teams.bottom.name }
+        },
+        keybindings: state.keybindings
+    };
+    try {
+        fs.writeFileSync(CONFIG_PATH, JSON.stringify(configToSave, null, 2), 'utf8');
+    } catch (e) {
+        console.error('設定の保存に失敗しましたわ:', e);
+    }
+}
+
+const config = loadConfig();
+
+// 状態管理
+let state = {
+    ball: 0,
+    strike: 0,
+    out: 0,
+    runners: [false, false, false], // [1塁, 2塁, 3塁]
+    teams: {
+        top: { name: config.teams.top.name, score: 0 },
+        bottom: { name: config.teams.bottom.name, score: 0 }
+    },
+    inning: 1,
+    isTop: true,
+    keybindings: config.keybindings
 };
 
 // node-global-key-listener の名前を browser e.code 形式に変換
@@ -62,21 +106,21 @@ function normalizeKeyName(name) {
     return mapping[name] || name;
 }
 
-app.use(express.static('public'));
-app.use('/assets', express.static(path.join(__dirname, 'assets')));
-
-// API: 状態取得
-app.get('/api/state', (req, res) => {
-    res.json(state);
-});
-
 // Socket.io 通信
 io.on('connection', (socket) => {
     console.log('クライアントが接続しましたわ');
     socket.emit('stateUpdate', state);
 
     socket.on('updateState', (newState) => {
+        const teamChanged = newState.teams && (newState.teams.top.name !== state.teams.top.name || newState.teams.bottom.name !== state.teams.bottom.name);
+        const keyChanged = !!newState.keybindings;
+
         state = { ...state, ...newState };
+        
+        if (teamChanged || keyChanged) {
+            saveConfig();
+        }
+        
         io.emit('stateUpdate', state);
     });
 });
