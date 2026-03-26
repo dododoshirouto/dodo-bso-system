@@ -220,8 +220,8 @@
                     }
                 }
             } else {
-                // 通常の登録操作
-                const normalizedKey = keyName.toUpperCase();
+                // 通常の登録操作 (e.code を使用してテンキー等を区別)
+                const normalizedKey = e.code;
                 
                 // 他のアクションに割り当てられていたら消す
                 delete newKeybindings[normalizedKey];

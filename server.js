@@ -23,19 +23,44 @@ let state = {
     inning: 1,
     isTop: true,
     keybindings: {
-        'B': 'addBall',
-        'S': 'addStrike',
-        'O': 'addOut',
-        '1': 'toggleRunner1',
-        '2': 'toggleRunner2',
-        '3': 'toggleRunner3',
-        'I': 'addInning',
-        'T': 'toggleTopBottom',
-        'U': 'addTopScore',
-        'D': 'addBottomScore',
-        'R': 'resetCounts'
+        'KeyB': 'addBall',
+        'KeyS': 'addStrike',
+        'KeyO': 'addOut',
+        'Digit1': 'toggleRunner1',
+        'Digit2': 'toggleRunner2',
+        'Digit3': 'toggleRunner3',
+        'KeyI': 'addInning',
+        'KeyT': 'toggleTopBottom',
+        'KeyU': 'addTopScore',
+        'KeyD': 'addBottomScore',
+        'KeyR': 'resetCounts'
     }
 };
+
+// node-global-key-listener の名前を browser e.code 形式に変換
+function normalizeKeyName(name) {
+    if (/^[A-Z]$/.test(name)) return `Key${name}`;
+    if (/^[0-9]$/.test(name)) return `Digit${name}`;
+    if (/^NUMPAD [0-9]$/.test(name)) return `Numpad${name.slice(-1)}`;
+    
+    const mapping = {
+        'ESCAPE': 'Escape',
+        'BACKSPACE': 'Backspace',
+        'DELETE': 'Delete',
+        'RETURN': 'Enter',
+        'SPACE': 'Space',
+        'INS': 'Insert',
+        'HOME': 'Home',
+        'PAGE UP': 'PageUp',
+        'PAGE DOWN': 'PageDown',
+        'END': 'End',
+        'UP': 'ArrowUp',
+        'DOWN': 'ArrowDown',
+        'LEFT': 'ArrowLeft',
+        'RIGHT': 'ArrowRight'
+    };
+    return mapping[name] || name;
+}
 
 app.use(express.static('public'));
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
@@ -61,7 +86,8 @@ const v = new GlobalKeyboardListener();
 
 v.addListener((e, down) => {
     if (e.state === "DOWN") {
-        const action = state.keybindings[e.name];
+        const normalizedKey = normalizeKeyName(e.name);
+        const action = state.keybindings[normalizedKey];
         if (action) {
             handleAction(action);
         }
