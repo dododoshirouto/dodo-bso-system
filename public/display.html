@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
     <meta charset="UTF-8">
     <title>BSO Display</title>
@@ -8,6 +9,7 @@
             font-family: 'LINESeedJP';
             src: url('/assets/LINESeedJP_OTF_Rg.otf');
         }
+
         body {
             margin: 0;
             padding: 0;
@@ -17,11 +19,13 @@
             color: white;
             /* 影はユーザーの指定があれば調整 */
         }
+
         .container {
             position: relative;
             width: 1920px;
             height: 1080px;
         }
+
         .layer {
             position: absolute;
             top: 0;
@@ -29,15 +33,18 @@
             width: 1920px;
             height: 1080px;
             display: none;
-            image-rendering: -webkit-optimize-contrast; /* 鮮明に表示 */
+            image-rendering: -webkit-optimize-contrast;
+            /* 鮮明に表示 */
         }
+
         .always-show {
             display: block;
         }
+
         .active {
             display: block;
         }
-        
+
         /* テキストレイヤーのコンテナ */
         .text-layer {
             position: absolute;
@@ -47,26 +54,54 @@
             height: 1080px;
             z-index: 9999;
         }
+
         /* テキスト要素のスタイル */
         .text-overlay {
             position: absolute;
             white-space: nowrap;
-            font-size: 30px;
+            font-size: 28px;
             font-weight: bold;
         }
-        #inning-num { left: 1563px; top: 875px; }
-        #top-bottom-kanji { left: 1593px; top: 875px; }
-        #team-top-name { left: 1537px; top: 920px; }
-        #team-bottom-name { left: 1537px; top: 957px; }
-        #score-top { right: 253px; top: 920px; text-align: right; }
-        #score-bottom { right: 253px; top: 957px; text-align: right; }
+
+        #inning-num {
+            left: 1563px;
+            top: 875px;
+        }
+
+        #top-bottom-kanji {
+            left: 1593px;
+            top: 875px;
+        }
+
+        #team-top-name {
+            left: 1537px;
+            top: 920px;
+        }
+
+        #team-bottom-name {
+            left: 1537px;
+            top: 957px;
+        }
+
+        #score-top {
+            right: 270px;
+            top: 922px;
+            text-align: right;
+        }
+
+        #score-bottom {
+            right: 270px;
+            top: 959px;
+            text-align: right;
+        }
     </style>
 </head>
+
 <body>
     <div class="container">
         <!-- レイヤー順: base -> rui -> BSO -> その他 -->
         <img src="/assets/base.png" class="layer always-show">
-        
+
         <img id="rui1" src="/assets/rui1.png" class="layer">
         <img id="rui2" src="/assets/rui2.png" class="layer">
         <img id="rui3" src="/assets/rui3.png" class="layer">
@@ -111,7 +146,7 @@
             // アウト
             document.getElementById('o1').classList.toggle('active', state.out >= 1);
             document.getElementById('o2').classList.toggle('active', state.out >= 2);
-            
+
             // ランナー (baseとBSOの間に表示されるレイヤー)
             document.getElementById('rui1').classList.toggle('active', state.runners[0]);
             document.getElementById('rui2').classList.toggle('active', state.runners[1]);
@@ -131,4 +166,5 @@
         });
     </script>
 </body>
+
 </html>
