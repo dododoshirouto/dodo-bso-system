@@ -78,7 +78,8 @@ let state = {
     },
     inning: 1,
     isTop: true,
-    keybindings: config.keybindings
+    keybindings: config.keybindings,
+    scoreHistory: { top: [0], bottom: [0] } // インデックス = イニング-1
 };
 
 // node-global-key-listener の名前を browser e.code 形式に変換
@@ -157,6 +158,10 @@ function advanceHalfInning() {
         // 裏→表（bottom→top）の切り替え時にイニング増加
         state.inning++;
     }
+    // 次のハーフイニング枠を確保
+    const nextIdx = state.inning - 1;
+    if (!state.scoreHistory.top[nextIdx]) state.scoreHistory.top[nextIdx] = 0;
+    if (!state.scoreHistory.bottom[nextIdx]) state.scoreHistory.bottom[nextIdx] = 0;
 }
 
 function handleAction(action) {
@@ -200,8 +205,24 @@ function handleAction(action) {
         case 'toggleRunner3': state.runners[2] = !state.runners[2]; break;
         case 'addInning': state.inning++; break;
         case 'toggleTopBottom': state.isTop = !state.isTop; break;
-        case 'addTopScore': state.teams.top.score++; break;
-        case 'addBottomScore': state.teams.bottom.score++; break;
+        case 'addTopScore':
+            state.teams.top.score++;
+            // isTopのとき（表）が先攻の打席
+            if (state.isTop) {
+                const idx = state.inning - 1;
+                if (!state.scoreHistory.top[idx]) state.scoreHistory.top[idx] = 0;
+                state.scoreHistory.top[idx]++;
+            }
+            break;
+        case 'addBottomScore':
+            state.teams.bottom.score++;
+            // !isTopのとき（裏）が後攻の打席
+            if (!state.isTop) {
+                const idx = state.inning - 1;
+                if (!state.scoreHistory.bottom[idx]) state.scoreHistory.bottom[idx] = 0;
+                state.scoreHistory.bottom[idx]++;
+            }
+            break;
         case 'resetCounts':
             state.ball = 0;
             state.strike = 0;

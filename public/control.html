@@ -46,6 +46,32 @@
             cursor: pointer;
         }
         button:hover { background: #0056b3; }
+
+        /* スコアボード */
+        .sb-table { border-collapse: collapse; width: 100%; }
+        .sb-table th, .sb-table td {
+            border: 1px solid #444;
+            padding: 6px 8px;
+            text-align: center;
+            font-size: 0.9em;
+            min-width: 36px;
+        }
+        .sb-table th { background: #333; color: #aaa; }
+        .sb-table td.team-name { text-align: left; color: #eee; background: #333; min-width: 100px; }
+        .sb-table input.score-input {
+            width: 40px;
+            background: #222;
+            border: 1px solid #555;
+            color: white;
+            text-align: center;
+            padding: 4px;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+        .sb-table td.total-cell { background: #333; font-weight: bold; }
+        .sb-table td.total-cell.ok { color: #4caf50; }
+        .sb-table td.total-cell.ng { color: #f44336; background: #3a1a1a; }
+        .sb-table td.current-inning { background: rgba(255,220,0,0.1); }
     </style>
 </head>
 <body>
@@ -108,6 +134,11 @@
     </div>
 
     <div class="panel">
+        <h2>スコアボード <span style="font-size:0.75em; color:#aaa; font-weight:normal;">— 合計との不一致は赤で表示</span></h2>
+        <div id="scoreboard-editor" style="overflow-x: auto;"></div>
+    </div>
+
+    <div class="panel">
         <h2>キーバインド設定 (グローバルホットキー)</h2>
         <div id="key-settings" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px;">
             <!-- サーバーから送られてくるキーバインドを表示 -->
@@ -127,6 +158,7 @@
 
         socket.on('stateUpdate', (state) => {
             currentState = state;
+            renderScoreboard(state);
             document.getElementById('top-name').value = state.teams.top.name;
             document.getElementById('top-score').value = state.teams.top.score;
             document.getElementById('bottom-name').value = state.teams.bottom.name;
@@ -238,6 +270,77 @@
             
             socket.emit('updateState', { keybindings: newKeybindings });
             cancelListen();
+        }
+
+        function renderScoreboard(state) {
+            const history = state.scoreHistory || { top: [], bottom: [] };
+            const totalInnings = Math.max(state.inning, history.top.length, history.bottom.length, 9);
+            const innings = Array.from({ length: totalInnings }, (_, i) => i + 1);
+
+            const topTotal = state.teams.top.score;
+            const bottomTotal = state.teams.bottom.score;
+            const topHistSum = history.top.reduce((a, b) => a + (b || 0), 0);
+            const bottomHistSum = history.bottom.reduce((a, b) => a + (b || 0), 0);
+
+            let html = '<table class="sb-table"><thead><tr>';
+            html += '<th></th>';
+            innings.forEach(i => { html += `<th>${i}</th>`; });
+            html += '<th style="border-left:2px solid #555">合計</th>';
+            html += '</tr></thead><tbody>';
+
+            // 先攻行
+            html += '<tr>';
+            html += `<td class="team-name">${esc(state.teams.top.name)}</td>`;
+            innings.forEach(i => {
+                const idx = i - 1;
+                const val = history.top[idx] || 0;
+                const isCurrent = (i === state.inning && state.isTop);
+                html += `<td class="${isCurrent ? 'current-inning' : ''}">
+                    <input class="score-input" type="number" min="0" value="${val}"
+                        data-team="top" data-inning="${idx}"
+                        onchange="onScoreEdit(this)">
+                </td>`;
+            });
+            const topOk = topHistSum === topTotal;
+            html += `<td class="total-cell ${topOk ? 'ok' : 'ng'}" title="${topOk ? '一致' : `履歴合計:${topHistSum} vs 総得点:${topTotal}`}">${topTotal}${topOk ? '' : ` <span style="font-size:0.8em">(履歴:${topHistSum})</span>`}</td>`;
+            html += '</tr>';
+
+            // 後攻行
+            html += '<tr>';
+            html += `<td class="team-name">${esc(state.teams.bottom.name)}</td>`;
+            innings.forEach(i => {
+                const idx = i - 1;
+                const val = history.bottom[idx] || 0;
+                const isCurrent = (i === state.inning && !state.isTop);
+                html += `<td class="${isCurrent ? 'current-inning' : ''}">
+                    <input class="score-input" type="number" min="0" value="${val}"
+                        data-team="bottom" data-inning="${idx}"
+                        onchange="onScoreEdit(this)">
+                </td>`;
+            });
+            const bottomOk = bottomHistSum === bottomTotal;
+            html += `<td class="total-cell ${bottomOk ? 'ok' : 'ng'}" title="${bottomOk ? '一致' : `履歴合計:${bottomHistSum} vs 総得点:${bottomTotal}`}">${bottomTotal}${bottomOk ? '' : ` <span style="font-size:0.8em">(履歴:${bottomHistSum})</span>`}</td>`;
+            html += '</tr></tbody></table>';
+
+            document.getElementById('scoreboard-editor').innerHTML = html;
+        }
+
+        function onScoreEdit(input) {
+            const team = input.dataset.team;
+            const idx = parseInt(input.dataset.inning);
+            const val = Math.max(0, parseInt(input.value) || 0);
+            input.value = val;
+
+            const newHistory = {
+                top: [...(currentState.scoreHistory?.top || [])],
+                bottom: [...(currentState.scoreHistory?.bottom || [])]
+            };
+            newHistory[team][idx] = val;
+            socket.emit('updateState', { scoreHistory: newHistory });
+        }
+
+        function esc(str) {
+            return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
         }
 
         function updateInfo() {

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>Scoreboard</title>
+    <style>
+        @font-face {
+            font-family: 'LINESeedJP';
+            src: url('/assets/LINESeedJP_OTF_Rg.otf');
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: transparent;
+            font-family: 'LINESeedJP', sans-serif;
+            color: white;
+            overflow: hidden;
+        }
+
+        body.with-bg {
+            background: rgba(0, 0, 0, 0.75);
+        }
+
+        .scoreboard {
+            display: inline-block;
+            border-collapse: collapse;
+            font-size: 22px;
+            font-weight: bold;
+            padding: 8px;
+        }
+
+        table {
+            border-collapse: collapse;
+        }
+
+        th, td {
+            width: 40px;
+            height: 36px;
+            text-align: center;
+            vertical-align: middle;
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 0 4px;
+        }
+
+        th {
+            font-size: 0.75em;
+            color: #aaa;
+            background: rgba(0,0,0,0.3);
+        }
+
+        td.team-name {
+            width: 120px;
+            text-align: left;
+            padding-left: 10px;
+            font-size: 0.9em;
+            background: rgba(0,0,0,0.3);
+        }
+
+        td.score-cell {
+            background: rgba(255,255,255,0.05);
+        }
+
+        td.score-cell.current-inning {
+            background: rgba(255, 220, 0, 0.15);
+        }
+
+        td.total {
+            background: rgba(255,255,255,0.1);
+            font-size: 1.1em;
+            color: #fff;
+            border-left: 2px solid rgba(255,255,255,0.4);
+        }
+
+        td.empty {
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <div class="scoreboard">
+        <table id="score-table">
+            <!-- JSで生成 -->
+        </table>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        // URLパラメータで背景ON/OFF
+        const params = new URLSearchParams(location.search);
+        if (params.get('bg') !== 'false') {
+            document.body.classList.add('with-bg');
+        }
+
+        const socket = io();
+
+        socket.on('stateUpdate', (state) => {
+            renderTable(state);
+        });
+
+        function renderTable(state) {
+            const table = document.getElementById('score-table');
+            const history = state.scoreHistory || { top: [], bottom: [] };
+            const totalInnings = Math.max(state.inning, history.top.length, history.bottom.length, 9);
+            const innings = Array.from({ length: totalInnings }, (_, i) => i + 1);
+
+            const topTotal = state.teams.top.score;
+            const bottomTotal = state.teams.bottom.score;
+
+            // ヘッダー行
+            let html = '<thead><tr>';
+            html += '<th></th>';
+            innings.forEach(i => { html += `<th>${i}</th>`; });
+            html += '<th style="border-left:2px solid rgba(255,255,255,0.4)">計</th>';
+            html += '</tr></thead>';
+
+            // 先攻行
+            html += '<tbody><tr>';
+            html += `<td class="team-name">${escHtml(state.teams.top.name)}</td>`;
+            innings.forEach(i => {
+                const idx = i - 1;
+                const val = history.top[idx];
+                const isCurrent = (i === state.inning && state.isTop);
+                const cls = isCurrent ? 'score-cell current-inning' : 'score-cell';
+                html += `<td class="${cls}">${(val !== undefined && val !== null) ? val : '<span class="empty">-</span>'}</td>`;
+            });
+            html += `<td class="total">${topTotal}</td>`;
+            html += '</tr>';
+
+            // 後攻行
+            html += '<tr>';
+            html += `<td class="team-name">${escHtml(state.teams.bottom.name)}</td>`;
+            innings.forEach(i => {
+                const idx = i - 1;
+                const val = history.bottom[idx];
+                const isCurrent = (i === state.inning && !state.isTop);
+                const cls = isCurrent ? 'score-cell current-inning' : 'score-cell';
+                html += `<td class="${cls}">${(val !== undefined && val !== null) ? val : '<span class="empty">-</span>'}</td>`;
+            });
+            html += `<td class="total">${bottomTotal}</td>`;
+            html += '</tr></tbody>';
+
+            table.innerHTML = html;
+        }
+
+        function escHtml(str) {
+            return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        }
+    </script>
+</body>
+</html>
