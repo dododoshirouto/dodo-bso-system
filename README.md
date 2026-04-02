@@ -28,7 +28,7 @@
     - OBSのブラウザソースとして読み込む画面です（1920x1080想定）。
 - **スコアボード (Scoreboard)**: `http://localhost:3000/scoreboard.html`
     - スコアボードのみを表示する画面です。
-    - **URLパラメータ**: `?nobg=true` を付けると、背景画像（`table_bg.png` と `table_line.png`）を非表示にし、テキストのみを表示します。OBS側で自前の背景を使いたい場合に有効です。
+    - **URLパラメータ**: `?nobg=true` を付けると、背景パネル（`table_bg.png`）を非表示にし、枠線（`table_line.png`）とテキストのみを表示します。OBS側で自前の背景を使いたい場合に有効です。
 
 ## ホットキー操作
 
