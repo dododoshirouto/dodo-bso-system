@@ -107,9 +107,9 @@
 <body>
     <div class="container">
         <!-- 背景パネル -->
-        <img src="/assets/table_bg.png" class="layer">
+        <img src="/assets/table_bg.png" class="layer bg-element">
         <!-- 縦線オーバーレイ -->
-        <img src="/assets/table_line.png" class="layer">
+        <img src="/assets/table_line.png" class="layer bg-element">
 
         <!-- テキストレイヤー -->
         <div class="text-layer">
@@ -129,6 +129,12 @@
     <script src="/socket.io/socket.io.js"></script>
     <script>
         const socket = io();
+
+        // URLパラメータによる背景制御
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('nobg') === 'true') {
+            document.querySelectorAll('.bg-element').forEach(el => el.style.display = 'none');
+        }
 
         socket.on('stateUpdate', (state) => {
             render(state);

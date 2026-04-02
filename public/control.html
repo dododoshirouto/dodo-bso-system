@@ -72,6 +72,32 @@
         .sb-table td.total-cell.ok { color: #4caf50; }
         .sb-table td.total-cell.ng { color: #f44336; background: #3a1a1a; }
         .sb-table td.current-inning { background: rgba(255,220,0,0.1); }
+
+        /* 固定フッター */
+        footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: linear-gradient(transparent, rgba(0,0,0,0.8));
+            padding: 10px 20px;
+            text-align: right;
+            box-sizing: border-box;
+            font-size: 0.75rem;
+            color: #888;
+            pointer-events: none; /* 下の要素の操作を邪魔しない */
+            z-index: 1000;
+        }
+        footer a {
+            color: #007bff;
+            text-decoration: none;
+            pointer-events: auto; /* リンクだけはクリック可能に */
+            transition: color 0.2s;
+        }
+        footer a:hover {
+            color: #00bfff;
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
@@ -360,5 +386,8 @@
             socket.emit('updateState', newState);
         }
     </script>
+    <footer>
+        &copy;どどど素人 <a href="https://x.com/super_amateur_c" target="_blank">dododo-shirouto 2026</a>
+    </footer>
 </body>
 </html>
