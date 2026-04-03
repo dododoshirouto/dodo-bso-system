@@ -155,7 +155,7 @@
                     const isCurrent = (i === state.inning && state.isTop);
                     // 現在プレイ中かつ未来のイニングは空表示
                     const isFuture = i > state.inning || (i === state.inning && !state.isTop && state.isTop === false);
-                    if (val === undefined || val === null) {
+                    if (val === undefined || val === null || val === "") {
                         return `<div class="cell-inning empty${isCurrent ? ' current' : ''}">-</div>`;
                     }
                     return `<div class="cell-inning${isCurrent ? ' current' : ''}">${val}</div>`;
@@ -170,7 +170,7 @@
                     const idx = i - 1;
                     const val = history.bottom[idx];
                     const isCurrent = (i === state.inning && !state.isTop);
-                    if (val === undefined || val === null) {
+                    if (val === undefined || val === null || val === "") {
                         return `<div class="cell-inning empty${isCurrent ? ' current' : ''}">-</div>`;
                     }
                     return `<div class="cell-inning${isCurrent ? ' current' : ''}">${val}</div>`;

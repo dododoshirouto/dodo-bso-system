@@ -113,7 +113,7 @@
                 </div>
                 <div class="input-group" style="width: 80px;">
                     <label>得点</label>
-                    <input type="number" id="top-score" onchange="updateInfo()">
+                    <input type="text" id="top-score" onchange="updateInfo()">
                 </div>
             </div>
             <div class="flex">
@@ -123,7 +123,7 @@
                 </div>
                 <div class="input-group" style="width: 80px;">
                     <label>得点</label>
-                    <input type="number" id="bottom-score" onchange="updateInfo()">
+                    <input type="text" id="bottom-score" onchange="updateInfo()">
                 </div>
             </div>
             <div class="flex">
@@ -303,10 +303,10 @@
             const totalInnings = Math.max(state.inning, history.top.length, history.bottom.length, 9);
             const innings = Array.from({ length: totalInnings }, (_, i) => i + 1);
 
-            const topTotal = state.teams.top.score;
-            const bottomTotal = state.teams.bottom.score;
-            const topHistSum = history.top.reduce((a, b) => a + (b || 0), 0);
-            const bottomHistSum = history.bottom.reduce((a, b) => a + (b || 0), 0);
+            const topTotal = parseInt(state.teams.top.score) || 0;
+            const bottomTotal = parseInt(state.teams.bottom.score) || 0;
+            const topHistSum = history.top.reduce((a, b) => a + (parseInt(b) || 0), 0);
+            const bottomHistSum = history.bottom.reduce((a, b) => a + (parseInt(b) || 0), 0);
 
             let html = '<table class="sb-table"><thead><tr>';
             html += '<th></th>';
@@ -319,10 +319,10 @@
             html += `<td class="team-name">${esc(state.teams.top.name)}</td>`;
             innings.forEach(i => {
                 const idx = i - 1;
-                const val = history.top[idx] || 0;
+                const val = history.top[idx] != null ? history.top[idx] : "";
                 const isCurrent = (i === state.inning && state.isTop);
                 html += `<td class="${isCurrent ? 'current-inning' : ''}">
-                    <input class="score-input" type="number" min="0" value="${val}"
+                    <input class="score-input" type="text" value="${val}"
                         data-team="top" data-inning="${idx}"
                         onchange="onScoreEdit(this)">
                 </td>`;
@@ -336,10 +336,10 @@
             html += `<td class="team-name">${esc(state.teams.bottom.name)}</td>`;
             innings.forEach(i => {
                 const idx = i - 1;
-                const val = history.bottom[idx] || 0;
+                const val = history.bottom[idx] != null ? history.bottom[idx] : "";
                 const isCurrent = (i === state.inning && !state.isTop);
                 html += `<td class="${isCurrent ? 'current-inning' : ''}">
-                    <input class="score-input" type="number" min="0" value="${val}"
+                    <input class="score-input" type="text" value="${val}"
                         data-team="bottom" data-inning="${idx}"
                         onchange="onScoreEdit(this)">
                 </td>`;
@@ -354,7 +354,13 @@
         function onScoreEdit(input) {
             const team = input.dataset.team;
             const idx = parseInt(input.dataset.inning);
-            const val = Math.max(0, parseInt(input.value) || 0);
+            let val = input.value.trim();
+            if (val.toUpperCase() === "X") {
+                val = "X";
+            } else if (val !== "") {
+                val = parseInt(val);
+                if (isNaN(val) || val < 0) val = 0;
+            }
             input.value = val;
 
             const newHistory = {
@@ -370,10 +376,18 @@
         }
 
         function updateInfo() {
+            let topScore = document.getElementById('top-score').value.trim();
+            if (topScore.toUpperCase() === 'X') topScore = 'X';
+            else if (topScore !== '') { topScore = parseInt(topScore); if(isNaN(topScore)) topScore = 0; }
+
+            let bottomScore = document.getElementById('bottom-score').value.trim();
+            if (bottomScore.toUpperCase() === 'X') bottomScore = 'X';
+            else if (bottomScore !== '') { bottomScore = parseInt(bottomScore); if(isNaN(bottomScore)) bottomScore = 0; }
+
             const newState = {
                 teams: {
-                    top: { name: document.getElementById('top-name').value, score: parseInt(document.getElementById('top-score').value) },
-                    bottom: { name: document.getElementById('bottom-name').value, score: parseInt(document.getElementById('bottom-score').value) }
+                    top: { name: document.getElementById('top-name').value, score: topScore },
+                    bottom: { name: document.getElementById('bottom-name').value, score: bottomScore }
                 },
                 inning: parseInt(document.getElementById('inning').value),
                 isTop: document.getElementById('isTop').value === 'true',

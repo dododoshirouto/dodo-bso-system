@@ -79,7 +79,7 @@ let state = {
     inning: 1,
     isTop: true,
     keybindings: config.keybindings,
-    scoreHistory: { top: [0], bottom: [0] } // インデックス = イニング-1
+    scoreHistory: { top: [""], bottom: [""] } // インデックス = イニング-1
 };
 
 // node-global-key-listener の名前を browser e.code 形式に変換
@@ -160,8 +160,8 @@ function advanceHalfInning() {
     }
     // 次のハーフイニング枠を確保
     const nextIdx = state.inning - 1;
-    if (!state.scoreHistory.top[nextIdx]) state.scoreHistory.top[nextIdx] = 0;
-    if (!state.scoreHistory.bottom[nextIdx]) state.scoreHistory.bottom[nextIdx] = 0;
+    if (state.scoreHistory.top[nextIdx] == null) state.scoreHistory.top[nextIdx] = "";
+    if (state.scoreHistory.bottom[nextIdx] == null) state.scoreHistory.bottom[nextIdx] = "";
 }
 
 function handleAction(action) {
@@ -206,21 +206,19 @@ function handleAction(action) {
         case 'addInning': state.inning++; break;
         case 'toggleTopBottom': state.isTop = !state.isTop; break;
         case 'addTopScore':
-            state.teams.top.score++;
+            state.teams.top.score = (parseInt(state.teams.top.score) || 0) + 1;
             // isTopのとき（表）が先攻の打席
             if (state.isTop) {
                 const idx = state.inning - 1;
-                if (!state.scoreHistory.top[idx]) state.scoreHistory.top[idx] = 0;
-                state.scoreHistory.top[idx]++;
+                state.scoreHistory.top[idx] = (parseInt(state.scoreHistory.top[idx]) || 0) + 1;
             }
             break;
         case 'addBottomScore':
-            state.teams.bottom.score++;
+            state.teams.bottom.score = (parseInt(state.teams.bottom.score) || 0) + 1;
             // !isTopのとき（裏）が後攻の打席
             if (!state.isTop) {
                 const idx = state.inning - 1;
-                if (!state.scoreHistory.bottom[idx]) state.scoreHistory.bottom[idx] = 0;
-                state.scoreHistory.bottom[idx]++;
+                state.scoreHistory.bottom[idx] = (parseInt(state.scoreHistory.bottom[idx]) || 0) + 1;
             }
             break;
         case 'resetCounts':
