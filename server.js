@@ -8,7 +8,13 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-const PORT = 3000;
+const args = process.argv.slice(2);
+let portOverride = null;
+const portIdx = args.indexOf('--port');
+if (portIdx !== -1 && args[portIdx + 1]) {
+    portOverride = parseInt(args[portIdx + 1], 10);
+}
+const PORT = portOverride || 3000;
 
 const fs = require('fs');
 
