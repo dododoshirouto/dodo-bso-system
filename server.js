@@ -138,18 +138,28 @@ io.on('connection', (socket) => {
         
         io.emit('stateUpdate', state);
     });
+
+    socket.on('performAction', (action) => {
+        handleAction(action);
+    });
 });
 
 // グローバルホットキーのリスナー
 const v = new GlobalKeyboardListener();
+const pressedKeys = new Set();
 
 v.addListener((e, down) => {
+    const normalizedKey = normalizeKeyName(e.name);
     if (e.state === "DOWN") {
-        const normalizedKey = normalizeKeyName(e.name);
+        if (pressedKeys.has(normalizedKey)) return; // 長押しでの連打防止
+        pressedKeys.add(normalizedKey);
+
         const action = state.keybindings[normalizedKey];
         if (action) {
             handleAction(action);
         }
+    } else if (e.state === "UP") {
+        pressedKeys.delete(normalizedKey);
     }
 });
 
@@ -175,17 +185,9 @@ function handleAction(action) {
         case 'addBall':
             state.ball++;
             if (state.ball >= 4) {
-                // ボールが一巡したらストライク増加
+                // 四球でカウント（ボール・ストライクのみ）リセット
                 state.ball = 0;
-                state.strike++;
-                if (state.strike >= 3) {
-                    // ストライクも一巡したらアウト増加
-                    state.strike = 0;
-                    state.out++;
-                    if (state.out >= 3) {
-                        advanceHalfInning();
-                    }
-                }
+                state.strike = 0;
             }
             break;
         case 'addStrike':
@@ -231,6 +233,15 @@ function handleAction(action) {
             state.ball = 0;
             state.strike = 0;
             state.out = 0;
+            break;
+        case 'removeBall':
+            if (state.ball > 0) state.ball--;
+            break;
+        case 'removeStrike':
+            if (state.strike > 0) state.strike--;
+            break;
+        case 'removeOut':
+            if (state.out > 0) state.out--;
             break;
     }
     console.log('Action:', action, 'State:', state);

@@ -143,10 +143,25 @@
 
         <div class="panel" style="flex: 1;">
             <h2>現在のカウント</h2>
-            <div style="font-size: 2em; line-height: 1.5;">
-                <div>B: <span id="b-text">0</span></div>
-                <div>S: <span id="s-text">0</span></div>
-                <div>O: <span id="o-text">0</span></div>
+            <div style="font-size: 1.5em; line-height: 1.5;">
+                <div style="display:flex; align-items:center; gap: 10px;">
+                    B: <span id="b-text" style="width:30px; display:inline-block; text-align:center;">0</span>
+                    <button onclick="emitAction('addBall')" style="padding: 2px 10px; font-size:0.8em;">＋</button>
+                    <button onclick="emitAction('removeBall')" style="padding: 2px 10px; font-size:0.8em; background:#d9534f;">－</button>
+                </div>
+                <div style="display:flex; align-items:center; gap: 10px; margin-top:5px;">
+                    S: <span id="s-text" style="width:30px; display:inline-block; text-align:center;">0</span>
+                    <button onclick="emitAction('addStrike')" style="padding: 2px 10px; font-size:0.8em;">＋</button>
+                    <button onclick="emitAction('removeStrike')" style="padding: 2px 10px; font-size:0.8em; background:#d9534f;">－</button>
+                </div>
+                <div style="display:flex; align-items:center; gap: 10px; margin-top:5px;">
+                    O: <span id="o-text" style="width:30px; display:inline-block; text-align:center;">0</span>
+                    <button onclick="emitAction('addOut')" style="padding: 2px 10px; font-size:0.8em;">＋</button>
+                    <button onclick="emitAction('removeOut')" style="padding: 2px 10px; font-size:0.8em; background:#d9534f;">－</button>
+                </div>
+                <div style="margin-top: 15px; display: flex; gap: 10px;">
+                    <button onclick="emitAction('resetCounts')" style="background:#f44336; padding: 5px 15px;">BSO全クリア</button>
+                </div>
             </div>
             <div style="margin-top: 20px;">
                 <label>ランナー</label>
@@ -215,8 +230,12 @@
             toggleTopBottom: "表裏切り替え",
             addTopScore: "先攻得点+",
             addBottomScore: "後攻得点+",
-            resetCounts: "カウントリセット"
+            resetCounts: "BSO全クリア"
         };
+
+        function emitAction(action) {
+            socket.emit('performAction', action);
+        }
 
         function renderKeySettings(keybindings) {
             const container = document.getElementById('key-settings');
